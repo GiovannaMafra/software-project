@@ -43,6 +43,8 @@ class Navigation:
   def goToPoint(robot: Robot, target: Point):
     target = Point(target.x * M_TO_MM, target.y * M_TO_MM)
     robot_position = Point(robot.x * M_TO_MM, robot.y * M_TO_MM)
+
+    #print(f"posição atual: {robot_position.x}, {robot_position.y}")
     robot_angle = Navigation.degrees_to_radians(Geometry.normalize_angle(robot.theta, 0, 180))
 
     max_velocity = MAX_VELOCITY

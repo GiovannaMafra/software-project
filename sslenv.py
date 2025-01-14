@@ -11,6 +11,8 @@ from random_agent import RandomAgent
 import random
 import pygame
 from utils.CLI import Difficulty
+from obstacle_manager import ObstacleManager
+from planner import Planner
 
 class SSLExampleEnv(SSLBaseEnv):
     def __init__(self, render_mode="human", difficulty=Difficulty.EASY):
@@ -29,6 +31,11 @@ class SSLExampleEnv(SSLBaseEnv):
         self.observation_space = Box(low=-self.field.length/2,\
             high=self.field.length/2,shape=(n_obs, ))
         
+
+        self.ObstacleManager = ObstacleManager()#inicialização da classe Obstaculos 
+        self.planner = Planner(0.2, -3.0, 3.0, -2.0, 2.0, self.ObstacleManager)
+
+
         self.targets = []
         self.min_dist = 0.18
         self.all_points = FixedQueue(max(4, self.max_targets))
@@ -37,7 +44,7 @@ class SSLExampleEnv(SSLBaseEnv):
         self.rounds = self.max_rounds  ## because of the first round
         self.targets_per_round = 1
 
-        self.my_agents = {0: ExampleAgent(0, False)}
+        self.my_agents = {0: ExampleAgent(0, False, self.planner)}
         self.blue_agents = {i: RandomAgent(i, False) for i in range(1, 11)}
         self.yellow_agents = {i: RandomAgent(i, True) for i in range(0, 11)}
 
@@ -147,7 +154,7 @@ class SSLExampleEnv(SSLBaseEnv):
 
             places.insert(pos)
             pos_frame.robots_blue[i] = Robot(x=pos[0], y=pos[1], theta=theta())
-        
+            self.ObstacleManager.add_obstacle(Point(pos[0], pos[1]))  # Adiciona o obstáculo à lista
 
         for i in range(0, self.n_robots_yellow):
             pos = (self.x(), self.y())
@@ -156,6 +163,7 @@ class SSLExampleEnv(SSLBaseEnv):
 
             places.insert(pos)
             pos_frame.robots_yellow[i] = Robot(x=pos[0], y=pos[1], theta=theta())
+            self.ObstacleManager.add_obstacle(Point(pos[0], pos[1]))  # Adiciona o obstáculo à lista
 
         return pos_frame
     
