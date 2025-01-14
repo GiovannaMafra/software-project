@@ -33,6 +33,8 @@ class SSLExampleEnv(SSLBaseEnv):
         
 
         self.ObstacleManager = ObstacleManager()#inicialização da classe Obstaculos 
+        #é uma grid 6x4 -> 24m^2 
+        #se cada robo tem 
         self.planner = Planner(0.2, -3.0, 3.0, -2.0, 2.0, self.ObstacleManager)
 
 
