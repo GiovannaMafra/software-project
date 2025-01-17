@@ -15,7 +15,7 @@ class Planner:
         #self.motion = [(0.5, 0, 0.5), (-0.5, 0, 0.5), (0, 0.5, 0.5), (0, -0.5, 0.5), (0.5, 0.5, sqrt(0.5)*0.5), (0.5, -0.5, sqrt(0.5)*0.5), (-0.5, 0.5, sqrt(0.5)*0.5), (-0.5, -0.5, sqrt(0.5)*0.5)]
         #self.motion = [(0.5, 0, 0.5), (-0.5, 0, 0.5), (0, 0.5, 0.5), (0, -0.5, 0.5)]
         self.motion = [(0.3, 0, 0.3), (-0.3, 0, 0.3), (0, 0.3, 0.3), (0, -0.3, 0.3), (0.3, 0.3, sqrt(0.3)*0.3), (0.3, -0.3, sqrt(0.3)*0.3), (-0.3, 0.3, sqrt(0.3)*0.3), (-0.3, -0.3, sqrt(0.3)*0.3)]
-        #self.motion = [(0.2, 0, 0.2), (-0.2, 0, 0.2), (0, 0.2, 0.2), (0, -0.2, 0.2), (0.2, 0.2, sqrt(0.2)*0.2), (0.2, -0.2, sqrt(0.2)*0.2), (-0.2, 0.2, sqrt(0.2)*0.2), (-0.2, -0.2, sqrt(0.2)*0.2)]
+
     def planning(self, sx, sy, gx, gy):
  
   #planejamento de caminho usando A*
@@ -39,7 +39,7 @@ class Planner:
             path_steps += 1
             #se o node atual é o final, acaba // se o node for maior que os steps
             if path_steps >= 5 or (current.x == goal_node.x and current.y == goal_node.y):
-                return self.reconstruct_path(current, closed_set)
+                return self.reconstroi_path(current, closed_set)
 
             closed_set[q] = current
 
@@ -60,7 +60,7 @@ class Planner:
                 #ajuusta o index da grid
                 n_id = self.calc_index(node)
 
-                if not self.verify_node(node, n_id, closed_set):
+                if not self.verifica_node(node, n_id, closed_set):
                     continue
 
                 #se existe a posicao na open list, mas com um f menor, ignora essa
@@ -75,17 +75,17 @@ class Planner:
 
 
 
-    def calc_xy_index(self, position, minp):
-            return round((position - minp) / self.resolution)
+    def calc_xy_index(self, position, min):
+            return round((position - min) / self.resolution)
 
 
     def calc_index(self, node):
             return (node.y - self.min_y) * 6 + (node.x - self.min_x)
-            #return (node.y - self.min_y) * self.x_width + (node.x - self.min_x)
+            #return (node.y - self.min_y) * largura_x + (node.x - self.min_x)
 
 
-    def calc_position(self, index, minp):
-        return index * self.resolution + minp 
+    def calc_posicao(self, index, min):
+        return index * self.resolution + min
         #repensar resolution
 
     def calcula_custo(self, current, obstacles):
@@ -97,9 +97,9 @@ class Planner:
                 cost += 100 #penalidade
         return cost
 
-    def verify_node(self, node, n_id, closed_set):
-            px = self.calc_position(node.x, self.min_x)
-            py = self.calc_position(node.y, self.min_y)
+    def verifica_node(self, node, n_id, closed_set):
+            px = self.calc_posicao(node.x, self.min_x)
+            py = self.calc_posicao(node.y, self.min_y)
 
             if px < self.min_x or py < self.min_y or px >= self.max_x or py >= self.max_y:
                 return False
@@ -110,14 +110,14 @@ class Planner:
             
             return True
 
-    def reconstruct_path(self, goal_node, closed_set):
+    def reconstroi_path(self, goal_node, closed_set):
         rx, ry = [], []
         current_node = goal_node
 
         while current_node.parent_index != -1:
             #converte de índices da grid para coordenadas reais
-            real_x = self.calc_position(current_node.x, self.min_x)
-            real_y = self.calc_position(current_node.y, self.min_y)
+            real_x = self.calc_posicao(current_node.x, self.min_x)
+            real_y = self.calc_posicao(current_node.y, self.min_y)
             rx.append(real_x)
             ry.append(real_y)
 
@@ -125,8 +125,8 @@ class Planner:
             current_node = closed_set[current_node.parent_index]
 
         #adiciona a posicao inicial no final do loop, para quando inverter ficar certo
-        real_x = self.calc_position(current_node.x, self.min_x)
-        real_y = self.calc_position(current_node.y, self.min_y)
+        real_x = self.calc_posicao(current_node.x, self.min_x)
+        real_y = self.calc_posicao(current_node.y, self.min_y)
         rx.append(real_x)
         ry.append(real_y)
 

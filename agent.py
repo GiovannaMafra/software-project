@@ -19,9 +19,9 @@ class ExampleAgent(BaseAgent):
         
         #verifica se o robô está "preso"
         if self.ultima_posicao:
-            distance_moved = ((self.robot.x - self.ultima_posicao[0]) ** 2 + (self.robot.y - self.ultima_posicao[1]) ** 2)**0.5
+            distance_movida = ((self.robot.x - self.ultima_posicao[0]) ** 2 + (self.robot.y - self.ultima_posicao[1]) ** 2)**0.5
             
-            if distance_moved < self.distancia_preso:
+            if distance_movida < self.distancia_preso:
                 self.count += 1
                 if self.count > 4:  #se o robo ficar se movendo muito pouco por mais de 4 interações, está preso
                     self.replanejar()  #recalcula o caminho
@@ -33,34 +33,33 @@ class ExampleAgent(BaseAgent):
 
         #caso o caminho ainda não tenha sido calculado
         if not self.path:
-            # Calcula o caminho usando A* com base no alvo atual
-            sx, sy = self.robot.x, self.robot.y  # Posição inicial do robô
-            gx, gy = self.targets[0].x, self.targets[0].y  # Posição do alvo
+            #calcula o caminho usando A* com base no alvo atual
+            sx, sy = self.robot.x, self.robot.y  #posiçao inicial do robô
+            gx, gy = self.targets[0].x, self.targets[0].y  #posiçao do alvo
             
-            print(f" posição target: {gx}, {gy}")
-            print(f" posição robot: {sx}, {sy}")
+            #print(f" posição target: {gx}, {gy}")
+            #print(f" posição robot: {sx}, {sy}")
 
             self.path = self.planner.planning(sx, sy, gx, gy)
-            print("recalculou") 
+            #print("recalculou") 
 
         #se existir um caminho calculado, o robô vai em direção ao próximo ponto
         if self.path and len(self.path[0]) > 0 and len(self.path[1]) > 0 :
-            next_posicao = Point(self.path[0][0], self.path[1][0])  # Pega o primeiro ponto do caminho
+            next_posicao = Point(self.path[0][0], self.path[1][0])  #pega o primeiro ponto do caminho
             
             target_velocity, target_angle_velocity = Navigation.goToPoint(self.robot, next_posicao)
             self.set_vel(target_velocity)
             self.set_angle_vel(target_angle_velocity) 
 
-            distance_to_target = ((self.robot.x - next_posicao.x)**2 + (self.robot.y - next_posicao.y)**2)**0.5
+            distancia_do_target = ((self.robot.x - next_posicao.x)**2 + (self.robot.y - next_posicao.y)**2)**0.5
 
-            if distance_to_target < 0.2:  #valor de tolerância (não vai chegar na posição exata)
+            if distancia_do_target < 0.2:  #valor de tolerância (não vai chegar na posição exata)
                 self.path[0].pop(0)
                 self.path[1].pop(0)  
 
-                # Se o caminho está vazio, o robô alcançou o alvo atual
+                #se o caminho está vazio, o robô alcançou o alvo atual
                 if len(self.path[0]) == 0 or len(self.path[1]) == 0:
                     self.targets.pop(0) #remove alvo atingido
-                    print("tirou do caminho")
                     self.path = []  #reseta o caminho
         
         return
