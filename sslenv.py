@@ -87,7 +87,7 @@ class SSLExampleEnv(SSLBaseEnv):
             if self.targets_per_round < self.max_targets:
                 self.targets_per_round += 1
                 self.blue_agents.pop(len(self.my_agents))
-                self.my_agents[len(self.my_agents)] = ExampleAgent(len(self.my_agents), False)
+                self.my_agents[len(self.my_agents)] = ExampleAgent(len(self.my_agents), False, self.planner)
 
         # Generate new targets
         if len(self.targets) == 0:
