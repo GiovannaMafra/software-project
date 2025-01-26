@@ -53,7 +53,7 @@ class Planner:
                 h = ((current.x + move_x - goal_node.x)**2 + (current.y + move_y - goal_node.y)**2 )**0.5
 
                 #f = g + h
-                f =  temp_cost + current.cost + move_cost + h * 3
+                f =  temp_cost + current.cost + move_cost + h * 5
 
                 node = Node(current.x + move_x, current.y + move_y, current.cost + move_cost + temp_cost, f,  q)
                 #ajuusta o index da grid
@@ -93,7 +93,7 @@ class Planner:
 
     def calcula_custo(self, current, obstacles):
         cost = current.cost
-        raio_seguranca = 0.5
+        raio_seguranca = 0.8
 
         for obs in obstacles:
 

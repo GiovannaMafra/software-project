@@ -25,7 +25,7 @@ class ExampleAgent(BaseAgent):
 
         #caso o caminho ainda não tenha sido calculado
         if not self.path:
-            if len(self.visitados) > 5:
+            if len(self.visitados) > 1:
                 self.visitados.pop()
 
             #parte que divide os robos entre os alvos
