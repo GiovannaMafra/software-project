@@ -38,7 +38,6 @@ class Planner:
 
             #se o node atual é o final, acaba // se o node for maior que os steps
             if path_steps >= 10 or (current.x == goal_node.x and current.y == goal_node.y):
-                print("acabou")
                 return self.reconstroi_path(current, closed_set)
 
             closed_set[q] = current
