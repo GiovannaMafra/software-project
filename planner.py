@@ -1,6 +1,7 @@
 from node import Node 
 from obstacle_manager import ObstacleManager 
 from math import sqrt
+from collections import deque
 
 class Planner: 
     def __init__(self, resolution, min_x, max_x, min_y, max_y, obstacle_manager): 
@@ -11,12 +12,9 @@ class Planner:
         self.max_y = max_y
         self.obstacle_manager = obstacle_manager 
         #testando qual movimentação seria melhor
-        #self.motion = [(1, 0, 1), (-1, 0, 1), (0, 1, 1), (0, -1, 1), (1, 1, sqrt(2)), (1, -1, sqrt(2)), (-1, 1, sqrt(2)), (-1, -1, sqrt(2))]
-        #self.motion = [(0.5, 0, 0.5), (-0.5, 0, 0.5), (0, 0.5, 0.5), (0, -0.5, 0.5), (0.5, 0.5, sqrt(0.5)*0.5), (0.5, -0.5, sqrt(0.5)*0.5), (-0.5, 0.5, sqrt(0.5)*0.5), (-0.5, -0.5, sqrt(0.5)*0.5)]
-        #self.motion = [(0.5, 0, 0.5), (-0.5, 0, 0.5), (0, 0.5, 0.5), (0, -0.5, 0.5)]
-        self.motion = [(0.3, 0, 0.3), (-0.3, 0, 0.3), (0, 0.3, 0.3), (0, -0.3, 0.3), (0.3, 0.3, sqrt(0.3)*0.3), (0.3, -0.3, sqrt(0.3)*0.3), (-0.3, 0.3, sqrt(0.3)*0.3), (-0.3, -0.3, sqrt(0.3)*0.3)]
+        self.motion = [(0.8, 0, 0.8), (-0.8, 0, 0.8), (0, 0.8, 0.8), (0, -0.8, 0.8), (0.8, 0.8, sqrt(1.28)), (0.8, -0.8, sqrt(1.28)), (-0.8, 0.8, sqrt(1.28)), (-0.8, -0.8, sqrt(1.28))]
 
-    def planning(self, sx, sy, gx, gy):
+    def planning(self, sx, sy, gx, gy, visitados):
  
   #planejamento de caminho usando A*
 
@@ -37,8 +35,10 @@ class Planner:
             del open_set[q]
 
             path_steps += 1
+
             #se o node atual é o final, acaba // se o node for maior que os steps
-            if path_steps >= 5 or (current.x == goal_node.x and current.y == goal_node.y):
+            if path_steps >= 10 or (current.x == goal_node.x and current.y == goal_node.y):
+                print("acabou")
                 return self.reconstroi_path(current, closed_set)
 
             closed_set[q] = current
@@ -48,27 +48,29 @@ class Planner:
             for move_x, move_y, move_cost in self.motion:
 
                 #calcula o custo baseado se existe ou não um obstaculo perto, se existir o custo aumenta uma penalidade
-                current.cost = self.calcula_custo(current, obstacles)
+                temp_cost = self.calcula_custo(current, obstacles)
 
                 #heuristica euclidiana
                 h = ((current.x + move_x - goal_node.x)**2 + (current.y + move_y - goal_node.y)**2 )**0.5
 
                 #f = g + h
-                f =  current.cost + move_cost + h
+                f =  temp_cost + current.cost + move_cost + h * 3
 
-                node = Node(current.x + move_x, current.y + move_y, current.cost + move_cost, f,  q)
+                node = Node(current.x + move_x, current.y + move_y, current.cost + move_cost + temp_cost, f,  q)
                 #ajuusta o index da grid
                 n_id = self.calc_index(node)
 
-                if not self.verifica_node(node, n_id, closed_set):
+                if not self.verifica_node(node, n_id, closed_set, visitados):
                     continue
 
+                visitados.add((node.x, node.y))
+
                 #se existe a posicao na open list, mas com um f menor, ignora essa
-                if n_id in open_set and open_set[n_id].f < node.f:
+                if n_id in open_set and open_set[n_id].f <= node.f:
                     continue
 
                 #se existe a posicao na closed list, mas com f menor, ignora
-                if n_id in closed_set and closed_set[n_id].f < node.f:
+                if n_id in closed_set and closed_set[n_id].f <= node.f:
                     continue
             
                 open_set[n_id] = node
@@ -80,24 +82,32 @@ class Planner:
 
 
     def calc_index(self, node):
-            return (node.y - self.min_y) * 6 + (node.x - self.min_x)
+         return (node.y - self.min_y) * 6 + (node.x - self.min_x)
             #return (node.y - self.min_y) * largura_x + (node.x - self.min_x)
 
 
     def calc_posicao(self, index, min):
-        return index * self.resolution + min
+        position = index * self.resolution + min
+    
+        return position
         #repensar resolution
 
     def calcula_custo(self, current, obstacles):
         cost = current.cost
-        raio_seguranca = 0.3 
+        raio_seguranca = 0.5
+
         for obs in obstacles:
-            distance_to_obstacle = ((current.x - obs[0])**2 + (current.y - obs[1])**2)** 0.5
+
+            obs_na_grid_x = self.calc_xy_index(obs[0], self.min_x)
+            obs_na_grid_y = self.calc_xy_index(obs[1], self.min_y)
+
+            distance_to_obstacle = ((current.x - obs_na_grid_x)**2 + (current.y - obs_na_grid_y)**2)** 0.5
+
             if distance_to_obstacle <= raio_seguranca:
                 cost += 100 #penalidade
         return cost
 
-    def verifica_node(self, node, n_id, closed_set):
+    def verifica_node(self, node, n_id, closed_set, visitados):
             px = self.calc_posicao(node.x, self.min_x)
             py = self.calc_posicao(node.y, self.min_y)
 
@@ -106,6 +116,9 @@ class Planner:
             
             #tentar não voltar posiçoes
             if  n_id in closed_set:
+                return False
+            
+            if (node.x, node.y) in visitados:
                 return False
             
             return True
